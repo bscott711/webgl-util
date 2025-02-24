@@ -1,36 +1,38 @@
-var Shader = function(gl, vertexSrc, fragmentSrc) {
-    var self = this;
-    this.program = compileShader(gl, vertexSrc, fragmentSrc);
+class Shader {
+    constructor(gl, vertexSrc, fragmentSrc) {
+        var self = this;
+        this.program = compileShader(gl, vertexSrc, fragmentSrc);
 
-    var regexUniform = /uniform[^;]+[ ](\w+);/g
-    var matchUniformName = /uniform[^;]+[ ](\w+);/
+        var regexUniform = /uniform[^;]+[ ](\w+);/g;
+        var matchUniformName = /uniform[^;]+[ ](\w+);/;
 
-    this.uniforms = {};
+        this.uniforms = {};
 
-    var vertexUnifs = vertexSrc.match(regexUniform);
-    var fragUnifs = fragmentSrc.match(regexUniform);
+        var vertexUnifs = vertexSrc.match(regexUniform);
+        var fragUnifs = fragmentSrc.match(regexUniform);
 
-    if (vertexUnifs) {
-        vertexUnifs.forEach(function(unif) {
-            var m = unif.match(matchUniformName);
-            self.uniforms[m[1]] = -1;
-        });
+        if (vertexUnifs) {
+            vertexUnifs.forEach(function (unif) {
+                var m = unif.match(matchUniformName);
+                self.uniforms[m[1]] = -1;
+            });
+        }
+        if (fragUnifs) {
+            fragUnifs.forEach(function (unif) {
+                var m = unif.match(matchUniformName);
+                self.uniforms[m[1]] = -1;
+            });
+        }
+
+        for (var unif in this.uniforms) {
+            this.uniforms[unif] = gl.getUniformLocation(this.program, unif);
+        }
     }
-    if (fragUnifs) {
-        fragUnifs.forEach(function(unif) {
-            var m = unif.match(matchUniformName);
-            self.uniforms[m[1]] = -1;
-        });
-    }
-
-    for (var unif in this.uniforms) {
-        this.uniforms[unif] = gl.getUniformLocation(this.program, unif);
+    use(gl) {
+        gl.useProgram(this.program);
     }
 }
 
-Shader.prototype.use = function(gl) {
-    gl.useProgram(this.program);
-}
 
 // Compile and link the shaders vert and frag. vert and frag should contain
 // the shader source code for the vertex and fragment shaders respectively
